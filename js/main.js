@@ -1,8 +1,5 @@
 "use strict";
-var btn = document.getElementById("btn"); // test용 버튼
-btn.addEventListener("click", () => {
-    setCreature(dummy, true);
-});
+var btnContainer = document.getElementById("btn-container"); // 버튼 컨테이너
 var costSpan = document.getElementById("cost"); // 코스트 표시
 var lastTime = performance.now(); // 마지막 프레임 시간
 var field = document.getElementById("field"); // 필드 요소
@@ -35,11 +32,9 @@ async function loadCreatureData() {
     if (!response.ok) {
         throw new Error(`Failed to load creature data: creatures.json`);
     }
-    // json()은 이제 creatureStructure[] 타입을 반환합니다.
     return await response.json();
 }
 var creaturesData = [];
-var dummy;
 var setCreature = (creature, isPlayer) => {
     if (isPlayer && curGameState.cost < creature.cost) {
         console.log(`Not enough cost to set ${creature.name}!`);
@@ -104,7 +99,6 @@ var attackedCreature = (creatureId, damage) => {
         creature.damaged(damage, creature.isPlayer);
     }
 };
-var testAttacking = false;
 function gameLoop(now) {
     const deltaTime = (now - lastTime) / 1000; // 초 단위로 변환
     lastTime = now;
@@ -113,9 +107,11 @@ function gameLoop(now) {
     if (e.length > 0 && now >= e[0].timing) {
         const enemyData = e.shift();
         if (enemyData) {
-            setCreature(dummy, false);
-            // 적 소환 로직 (추후 구현)
-            console.log(`Enemy ${enemyData.id} appears!`);
+            let target = creaturesData.find(c => c.id === enemyData.id);
+            if (target) {
+                setCreature(target, false);
+                console.log(`Enemy ${enemyData.id} appears!`);
+            }
         }
     }
     curGameState.playerCreatures.forEach(creature => {
@@ -215,20 +211,6 @@ async function initGame() {
         // 1. 데이터를 먼저 불러와서 배열에 저장
         creaturesData = await loadCreatureData();
         console.log("Creature data loaded:", creaturesData);
-        // 2. 불러온 배열에서 필요한 데이터(dummy) 추출
-        const foundDummy = creaturesData.find(c => c.id === "dummy");
-        if (foundDummy) {
-            dummy = foundDummy;
-        }
-        else {
-            throw new Error("Dummy data not found in JSON");
-        }
-        // 3. 데이터 로드가 완료된 후에 이벤트 리스너 등록
-        const btn = document.getElementById("btn");
-        btn.addEventListener("click", () => {
-            if (dummy)
-                setCreature(dummy, true);
-        });
         // 4. 게임 루프 시작
         requestAnimationFrame(gameLoop);
     }
