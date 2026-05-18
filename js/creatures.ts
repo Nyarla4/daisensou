@@ -1,6 +1,5 @@
-import { btnContainer, enemyBase, field, playerBase } from "./elements";
-import { CreatureData, CreatureInstance, GameState } from "./interfaces";
-import { updateCost } from "./main";
+import { btnContainer, enemyBase, field, playerBase } from "./elements.js";
+import { CreatureData, CreatureInstance, GameState } from "./interfaces.js";
 
 /** 개체 사망 후 사라지기까지 시간 */
 const REMOVE_DEAD_CREATURE_DELAY = 5000;
@@ -10,7 +9,7 @@ const KNOCKBACK_DISTANCE = 10;
 export let creaturesData: CreatureData[] = [];
 
 /** json 개체 데이터 로드 */
-async function loadCreatureData(): Promise<CreatureData[]> {
+async function fetchCreatureData(): Promise<CreatureData[]> {
     const response = await fetch("./json/creatures.json");
 
     if (!response.ok) {
@@ -20,12 +19,13 @@ async function loadCreatureData(): Promise<CreatureData[]> {
     return await response.json();
 }
 
-export async function loadData() {
-    creaturesData = await loadCreatureData();
+/** 전체 개체 데이터 로드 */
+export async function loadCreatureData() {
+    creaturesData = await fetchCreatureData();
 }
 
 /** 개체 소환 버튼 */
-export function renderCreatureButtons(gameState: GameState) {
+export function renderCreatureButtons(gameState: GameState, updateCost: () => void) {
     btnContainer.replaceChildren();
 
     creaturesData.forEach((creature) => {
@@ -33,14 +33,14 @@ export function renderCreatureButtons(gameState: GameState) {
         creatureBtn.textContent = creature.name;
         creatureBtn.classList.add("btn", "btn-primary");
         creatureBtn.addEventListener("click", () => {
-            summonCreature(gameState, creature, true);
+            summonCreature(gameState, creature, true, updateCost);
         });
         btnContainer.appendChild(creatureBtn);
     });
 }
 
 /** 개체 소환 함수 */
-export function summonCreature(gameState: GameState, creature: CreatureData, isPlayer: boolean) {
+export function summonCreature(gameState: GameState, creature: CreatureData, isPlayer: boolean, updateCost?: () => void) {
     if (isPlayer && gameState.cost < creature.cost) {
         console.log(`Not enough cost to set ${creature.name}!`);
         return;
@@ -48,7 +48,7 @@ export function summonCreature(gameState: GameState, creature: CreatureData, isP
 
     if (isPlayer) {
         gameState.cost -= creature.cost;
-        updateCost();
+        updateCost?.();
     }
 
     const targetArray = isPlayer ? gameState.playerCreatures : gameState.enemyCreatures;
@@ -138,6 +138,7 @@ export function updateCreatures(
     });
 }
 
+/** 공격 범위 내 첫 상대 개체 공격 */
 function attackFirstOpponentInRange(
     creature: CreatureInstance,
     opponents: CreatureInstance[],
@@ -162,7 +163,8 @@ function attackFirstOpponentInRange(
     return true;
 }
 
-function attackBaseIfInRange(gameState:GameState, creature: CreatureInstance, isPlayerSide: boolean, now: number): boolean {
+/** 베이스 공격 범위 확인 */
+function attackBaseIfInRange(gameState: GameState, creature: CreatureInstance, isPlayerSide: boolean, now: number): boolean {
     const isBaseInRange = isPlayerSide
         ? creature.position - creature.data.attackRange <= enemyBase.clientWidth
         : creature.position + creature.data.attackRange >= field.clientWidth - playerBase.clientWidth - playerBase.clientWidth;
@@ -175,6 +177,7 @@ function attackBaseIfInRange(gameState:GameState, creature: CreatureInstance, is
     return true;
 }
 
+/** 개체 공격 처리 */
 function attackCreature(attacker: CreatureInstance, target: CreatureInstance, now: number) {
     if (!canAttack(attacker, now)) {
         return;
@@ -185,7 +188,8 @@ function attackCreature(attacker: CreatureInstance, target: CreatureInstance, no
     target.damaged(attacker.data.attackDamage);
 }
 
-function attackBase(gameState:GameState, creature: CreatureInstance, isPlayerSide: boolean, now: number) {
+/** 베이스 공격 처리 */
+function attackBase(gameState: GameState, creature: CreatureInstance, isPlayerSide: boolean, now: number) {
     if (!canAttack(creature, now)) {
         return;
     }
@@ -204,20 +208,24 @@ function attackBase(gameState:GameState, creature: CreatureInstance, isPlayerSid
     }
 }
 
+/** 공격 가능 여부 */
 function canAttack(creature: CreatureInstance, now: number): boolean {
     return now - creature.lastAttackTime >= creature.data.attackTerm;
 }
 
+/** 개체 이동 처리 */
 function moveCreature(creature: CreatureInstance, isPlayerSide: boolean, deltaTime: number) {
     setCreatureImage(creature, creature.data.idle);
     creature.position += (isPlayerSide ? -1 : 1) * creature.data.moveSpeed * deltaTime;
     updateCreaturePosition(creature);
 }
 
+/** 개체 위치 갱신 */
 function updateCreaturePosition(creature: CreatureInstance) {
     creature.element.style.left = `${creature.position}px`;
 }
 
+/** 개체 이미지 변경 */
 function setCreatureImage(creature: CreatureInstance, src: string) {
     const creatureImg = creature.element.querySelector("img");
 
@@ -226,6 +234,7 @@ function setCreatureImage(creature: CreatureInstance, src: string) {
     }
 }
 
+/** 적 개체 이미지 방향 반전 */
 function setCreatureImageDirection(creature: CreatureInstance) {
     const creatureImg = creature.element.querySelector("img");
 

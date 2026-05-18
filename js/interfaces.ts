@@ -41,3 +41,9 @@ export interface EnemySpawn {
     id: string;
     timing: number;
 }
+
+export interface StageData {
+    no: string;
+    enemies: EnemySpawn[];
+    stageDistance: number;
+}

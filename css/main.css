@@ -11,6 +11,18 @@
     background-color: #f0f0f0;
 }
 
+.innerScreen {
+    display: none;
+}
+
+.innerScreen.active {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+}
+
 #field{
     position: relative;
     width: 100%;

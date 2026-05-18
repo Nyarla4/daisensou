@@ -1,9 +1,22 @@
-import { CreatureData, CreatureInstance, EnemySpawn, GameState, PlayerConfig } from "./interfaces.js";
-import { btnContainer, costSpan, enemyBase, field, playerBase, stageBtn, stageScreen, titleScreen } from "./elements.js";
-import { creaturesData, loadData, renderCreatureButtons, summonCreature, updateCreatures } from "./creatures.js";
+import { costSpan, field, stageBtn, stageScreen, titleScreen } from "./elements.js";
+import { creaturesData, loadCreatureData, renderCreatureButtons, summonCreature, updateCreatures } from "./creatures.js";
+import { EnemySpawn, GameState, PlayerConfig, StageData } from "./interfaces.js";
+import { loadStageData, renderStageButtons, showInStage, showStageSelector } from "./stages.js";
 
 /** deltaTime 계산용 변수 */
 let lastTime = performance.now();
+
+/** 스테이지 시작 시간 */
+let stageStartTime = performance.now();
+
+/** 게임 루프 실행 여부 */
+let isGameRunning = false;
+
+/** 현재 적 목록 */
+let enemyQueue: EnemySpawn[] = [];
+
+/** 게임 데이터 로드 Promise */
+let gameDataReady: Promise<void>;
 
 /** 현재 게임 상태 */
 const gameState: GameState = {
@@ -20,36 +33,50 @@ const playerConfig: PlayerConfig = {
     costPerSec: 1,
 };
 
-/** 현재 적 목록 */
-const enemyQueue: EnemySpawn[] = [
-    {
-        id: "dummy",
-        timing: 1000,
-    },
-    {
-        id: "dummy",
-        timing: 5000,
-    },
-];
+// 스테이지 버튼 클릭 시 스테이지 선택 화면 표시
+stageBtn.addEventListener("click", () => {
+    void openStageSelect();
+});
 
-// 스테이지 버튼(추후 스테이지 리스트가 나오도록 처리, startStage는 해당 스테이지 시작하도록 처리)
-stageBtn.addEventListener("click", startStage);
-
-/** 스테이지 시작 */
-function startStage() {
-    // 타이틀 => 스테이지선택
+/** 스테이지 선택 화면 열기 */
+async function openStageSelect() {
+    await gameDataReady;
     titleScreen.classList.remove("active");
     stageScreen.classList.add("active");
-
-    // 스테이지 내부 시작(이후 이부분만 startStage로 남길 것)
-    renderCreatureButtons(gameState);
-    field.style.width = `${gameState.distance}px`;
-    requestAnimationFrame(gameLoop);
+    showStageSelector();
+    renderStageButtons(startStage);
 }
 
+/** 스테이지 시작 */
+function startStage(stageData: StageData) {
+    showInStage();
+    resetGameState(stageData);
+    renderCreatureButtons(gameState, updateCost);
+    field.style.width = `${gameState.distance}px`;
+
+    lastTime = performance.now();
+    stageStartTime = lastTime;
+    if (!isGameRunning) {
+        isGameRunning = true;
+        requestAnimationFrame(gameLoop);
+    }
+}
+
+/** 스테이지 데이터 기준 게임 상태 초기화 */
+function resetGameState(stageData: StageData) {
+    gameState.cost = 0;
+    gameState.playerHp = 100;
+    gameState.enemyHp = 100;
+    gameState.playerCreatures = [];
+    gameState.enemyCreatures = [];
+    gameState.distance = stageData.stageDistance;
+    enemyQueue = [...stageData.enemies];
+    field.querySelectorAll(".creature").forEach((creature) => creature.remove());
+    updateCost();
+}
 
 /** 현재 코스트 텍스트 가시화 */
-export function updateCost() {
+function updateCost() {
     costSpan.textContent = `Current Cost: ${Math.floor(gameState.cost)}`;
 }
 
@@ -59,7 +86,7 @@ function gameLoop(now: number) {
     lastTime = now;
 
     gainCost(deltaTime);
-    spawnQueuedEnemies(now);
+    spawnQueuedEnemies(now - stageStartTime);
     updateCreatures(gameState.playerCreatures, gameState.enemyCreatures, true, now, deltaTime, gameState);
     updateCreatures(gameState.enemyCreatures, gameState.playerCreatures, false, now, deltaTime, gameState);
 
@@ -73,8 +100,8 @@ function gainCost(deltaTime: number) {
 }
 
 /** 큐에 있는 에너미 소환 처리 */
-function spawnQueuedEnemies(now: number) {
-    if (enemyQueue.length === 0 || now < enemyQueue[0].timing) {
+function spawnQueuedEnemies(stageElapsedTime: number) {
+    if (enemyQueue.length === 0 || stageElapsedTime < enemyQueue[0].timing) {
         return;
     }
 
@@ -87,13 +114,14 @@ function spawnQueuedEnemies(now: number) {
     }
 }
 
+/** 게임 초기화 */
 async function initGame() {
     try {
-        loadData();
+        await Promise.all([loadCreatureData(), loadStageData()]);
         console.log("Creature data loaded:", creaturesData);
     } catch (error) {
         console.error("Initialization failed:", error);
     }
 }
 
-initGame();
+gameDataReady = initGame();
