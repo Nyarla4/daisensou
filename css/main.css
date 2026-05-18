@@ -1,0 +1,28 @@
+#field{
+    position: relative;
+    width: 100%;
+    height: 400px;
+    background-color: lightgray;
+    overflow: hidden;
+}
+#enemyBase {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 100px;
+    height: 100px;
+    background-color: red;
+}
+#playerBase {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 100px;
+    height: 100px;
+    background-color: blue;
+}
+.creature {
+    position: absolute;
+}
