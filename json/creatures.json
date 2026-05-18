@@ -12,5 +12,19 @@
         "coolTime": 1000,
         "cost": 10,
         "maxHp": 100
+    },
+    {
+        "id": "dummy2",
+        "name": "더미2",
+        "idle": "./img/dummy_idle.png",
+        "attack": "./img/dummy_attack.png",
+        "die": "./img/dummy_die.png",
+        "moveSpeed": 50,
+        "attackRange": 30,
+        "attackTerm": 1000,
+        "attackDamage": 10,
+        "coolTime": 1000,
+        "cost": 1,
+        "maxHp": 100
     }
 ]

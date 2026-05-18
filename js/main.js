@@ -4,6 +4,19 @@ var stageBtn = document.getElementById("stage-btn"); // 스테이지 시작 버�
 stageBtn.addEventListener("click", () => {
     document.getElementById("title")?.classList.remove("active"); // 타이틀 숨기기
     document.getElementById("stage")?.classList.add("active"); // 스테이지 표시
+    var btnContainer = document.getElementById("btn-container");
+    if (btnContainer != null) {
+        creaturesData.forEach(creature => {
+            const creatureBtn = document.createElement("button");
+            creatureBtn.textContent = creature.name;
+            creatureBtn.classList.add("btn");
+            creatureBtn.classList.add("btn-primary");
+            creatureBtn.addEventListener("click", () => {
+                setCreature(creature, true);
+            });
+            btnContainer.appendChild(creatureBtn);
+        });
+    }
     requestAnimationFrame(gameLoop);
 });
 var costSpan = document.getElementById("cost"); // 코스트 표시
