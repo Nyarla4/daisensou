@@ -1,0 +1,34 @@
+[
+    {
+        "no": "1",
+        "enemies": [
+            {
+                "id": "dummy",
+                "timing": 5000
+            },
+            {
+                "id": "dummy",
+                "timing": 7000
+            }
+        ],
+        "stageDistance": 500
+    },
+    {
+        "no": "2",
+        "enemies": [
+            {
+                "id": "dummy",
+                "timing": 1000
+            },
+            {
+                "id": "dummy",
+                "timing": 5000
+            },
+            {
+                "id": "dummy",
+                "timing": 7000
+            }
+        ],
+        "stageDistance": 500
+    }
+]

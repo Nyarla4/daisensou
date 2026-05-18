@@ -1,260 +1,324 @@
-import { creatureStructure, creatureInstanced, gameState, player, enemy } from "./interfaces.js";
-import { btnContainer, stageBtn, titleScreen, stageScreen, field, playerBase, costSpan, enemyBase } from "./elements.js";
+import { CreatureData, CreatureInstance, EnemySpawn, GameState, PlayerConfig } from "./interfaces.js";
+import { btnContainer, costSpan, enemyBase, field, playerBase, stageBtn, stageScreen, titleScreen } from "./elements.js";
 
-stageBtn.addEventListener("click", () => {
-    titleScreen.classList.remove("active"); // 타이틀 숨기기
-    stageScreen.classList.add("active"); // 스테이지 표시
-    if (btnContainer != null) {
-        creaturesData.forEach(creature => {
-            const creatureBtn = document.createElement("button");
-            creatureBtn.textContent = creature.name;
-            creatureBtn.classList.add("btn");
-            creatureBtn.classList.add("btn-primary");
-            creatureBtn.addEventListener("click", () => {
-                setCreature(creature, true);
-            });
-            btnContainer!.appendChild(creatureBtn);
-        });
-    }
-    requestAnimationFrame(gameLoop);
-});
+/** 개체 사망 후 사라지기까지 시간 */
+const REMOVE_DEAD_CREATURE_DELAY = 5000;
+/** 피해시 넉백 거리 */
+const KNOCKBACK_DISTANCE = 10;
 
-var lastTime = performance.now(); // 마지막 프레임 시간
+/** deltaTime 계산용 변수 */
+let lastTime = performance.now();
+/** 모든 개체 데이터 */
+let creaturesData: CreatureData[] = [];
 
-var curGameState: gameState = {
+/** 현재 게임 상태 */
+const gameState: GameState = {
     cost: 0,
     playerHp: 100,
     enemyHp: 100,
     playerCreatures: [],
     enemyCreatures: [],
-    distance: 500
-}
-field.style.width = `${curGameState.distance}px`;
+    distance: 500,
+};
 
-var p: player = {
-    costPerSec: 1
-}
+/** 현재 플레이어 상태 */
+const playerConfig: PlayerConfig = {
+    costPerSec: 1,
+};
 
-var e: enemy[] = [
+/** 현재 적 목록 */
+const enemyQueue: EnemySpawn[] = [
     {
         id: "dummy",
-        timing: 1000
+        timing: 1000,
     },
     {
         id: "dummy",
-        timing: 5000
-    }
+        timing: 5000,
+    },
 ];
 
-async function loadCreatureData(): Promise<creatureStructure[]> {
-    const response = await fetch(`./json/creatures.json`);
+// 스테이지 버튼(추후 스테이지 리스트가 나오도록 처리, startStage는 해당 스테이지 시작하도록 처리)
+stageBtn.addEventListener("click", startStage);
+
+/** json 개체 데이터 로드 */
+async function loadCreatureData(): Promise<CreatureData[]> {
+    const response = await fetch("./json/creatures.json");
+
     if (!response.ok) {
-        throw new Error(`Failed to load creature data: creatures.json`);
+        throw new Error("Failed to load creature data: creatures.json");
     }
+
     return await response.json();
 }
 
-var creaturesData: creatureStructure[] = [];
+/** 스테이지 시작 */
+function startStage() {
+    // 타이틀 => 스테이지선택
+    titleScreen.classList.remove("active");
+    stageScreen.classList.add("active");
 
-var setCreature = (creature: creatureStructure, isPlayer: boolean) => {
-    if (isPlayer && curGameState.cost < creature.cost) {
+    // 스테이지 내부 시작(이후 이부분만 startStage로 남길 것)
+    renderCreatureButtons();
+    field.style.width = `${gameState.distance}px`;
+    requestAnimationFrame(gameLoop);
+}
+
+/** 개체 소환 버튼 */
+function renderCreatureButtons() {
+    btnContainer.replaceChildren();
+
+    creaturesData.forEach((creature) => {
+        const creatureBtn = document.createElement("button");
+        creatureBtn.textContent = creature.name;
+        creatureBtn.classList.add("btn", "btn-primary");
+        creatureBtn.addEventListener("click", () => {
+            summonCreature(creature, true);
+        });
+        btnContainer.appendChild(creatureBtn);
+    });
+}
+
+/** 개체 소환 함수 */
+function summonCreature(creature: CreatureData, isPlayer: boolean) {
+    if (isPlayer && gameState.cost < creature.cost) {
         console.log(`Not enough cost to set ${creature.name}!`);
         return;
     }
-    else {
-        var startPos = isPlayer ? field.clientWidth - playerBase.clientWidth : 0; // 개체의 시작 위치
-        if (isPlayer) {
-            curGameState.cost -= creature.cost;
-            costSpan.textContent = `Current Cost: ${curGameState.cost}`;
-        }
 
-        var newCreature: creatureInstanced = {
-            data: creature,
-            position: startPos,
-            lastAttackTime: 0,
-            element: document.createElement("div"),
-            hp: creature.maxHp,
-            isAlive: true,
-            isPlayer: isPlayer,
-            damaged: (damage: number, isPlayer: boolean) => {
-                newCreature.hp -= damage;
-                if (newCreature.hp <= 0) {
-                    newCreature.hp = 0;
-                    const creatureImg = document.querySelector(`#${newCreature.element.id} img`);
-                    if (creatureImg != null && creatureImg instanceof HTMLImageElement) {
-                        creatureImg.src = newCreature.data.die;
-                    }
-                    newCreature.isAlive = false;
-                    // 5초 후에 개체 제거
-                    setTimeout(() => {
-                        const creatureElement = document.getElementById(newCreature.element.id);
-                        if (creatureElement) {
-                            creatureElement.remove();
-                        }
-                    }, 5000);
-                }
-                if (isPlayer) {
-                    newCreature.position += 10; // 피격 시 뒤로 밀리는 효과
-                } else {
-                    newCreature.position -= 10; // 피격 시 앞으로 밀리는 효과 (적 개체는 플레이어 쪽으로 이동)
-                }
-                console.log(`${newCreature.data.name} takes ${damage} damage! Current HP: ${newCreature.hp}`);
-            },
-        };
-        var targetArray = isPlayer ? curGameState.playerCreatures : curGameState.enemyCreatures;
-        targetArray.push(newCreature);
-        let count = targetArray.filter(c => c.data.id === newCreature.data.id).length;
-        let creatureElement = newCreature.element;
-        creatureElement.id = `${isPlayer ? 'player-' : 'enemy-'}${newCreature.data.id}-${count}`;
-        creatureElement.className = "creature";
-        creatureElement.style.left = `${newCreature.position}px`;
-        creatureElement.innerHTML = `<img src="${newCreature.data.idle}" alt="${newCreature.data.name}" ${!isPlayer ? "style='transform: scaleX(-1);'" : ""}>`;
-        //creatureElement.innerHTML += `<button onclick="attackedCreature('${newCreature.element.id}',10)">Attacked</button>`;
-        field.appendChild(creatureElement);
-        console.log(`Set ${newCreature.data.name} to field!`);
+    if (isPlayer) {
+        gameState.cost -= creature.cost;
+        updateCost();
     }
+
+    const targetArray = isPlayer ? gameState.playerCreatures : gameState.enemyCreatures;
+    const newCreature = createCreatureInstance(creature, isPlayer);
+
+    targetArray.push(newCreature);
+    renderCreature(newCreature, targetArray);
+    console.log(`Set ${newCreature.data.name} to field!`);
 }
 
-// var attackedCreature = (creatureId: string, damage: number) => {
-//     const creature = curGameState.playerCreatures.find(c => c.element.id === creatureId);
-//     if (creature) {
-//         creature.damaged(damage, creature.isPlayer);
-//     }
-// }
+/** 개체 instantiate 처리 */
+function createCreatureInstance(creature: CreatureData, isPlayer: boolean): CreatureInstance {
+    const startPosition = isPlayer ? field.clientWidth - playerBase.clientWidth : 0;
+    const newCreature: CreatureInstance = {
+        data: creature,
+        position: startPosition,
+        lastAttackTime: 0,
+        element: document.createElement("div"),
+        hp: creature.maxHp,
+        isAlive: true,
+        isPlayer,
+        damaged: (damage: number) => {
+            damageCreature(newCreature, damage);
+        },
+    };
 
-function gameLoop(now: number) {
-    const deltaTime = (now - lastTime) / 1000; // 초 단위로 변환
-    lastTime = now;
+    return newCreature;
+}
 
-    curGameState.cost += p.costPerSec * deltaTime;
-    costSpan.textContent = `Current Cost: ${Math.floor(curGameState.cost)}`;
+/** 개체 렌더 */
+function renderCreature(creature: CreatureInstance, sameSideCreatures: CreatureInstance[]) {
+    const count = sameSideCreatures.filter((target) => target.data.id === creature.data.id).length;
+    const sidePrefix = creature.isPlayer ? "player" : "enemy";
 
-    if (e.length > 0 && now >= e[0].timing) {
-        const enemyData = e.shift();
-        if (enemyData) {
-            let target = creaturesData.find(c => c.id === enemyData.id);
-            if (target) {
-                setCreature(target, false);
-                console.log(`Enemy ${enemyData.id} appears!`);
-            }
-        }
+    creature.element.id = `${sidePrefix}-${creature.data.id}-${count}`;
+    creature.element.className = "creature";
+    creature.element.style.left = `${creature.position}px`;
+    creature.element.innerHTML = `<img src="${creature.data.idle}" alt="${creature.data.name}">`;
+
+    setCreatureImageDirection(creature);
+    field.appendChild(creature.element);
+}
+
+/** 개체 피해 */
+function damageCreature(creature: CreatureInstance, damage: number) {
+    creature.hp = Math.max(0, creature.hp - damage);
+
+    if (creature.hp <= 0) {
+        killCreature(creature);
     }
 
-    curGameState.playerCreatures.forEach(creature => {
-        if (!creature.isAlive) return; // 죽은 개체는 행동하지 않음
-        var isBlocked = false;
+    creature.position += creature.isPlayer ? KNOCKBACK_DISTANCE : -KNOCKBACK_DISTANCE;
+    updateCreaturePosition(creature);
+    console.log(`${creature.data.name} takes ${damage} damage! Current HP: ${creature.hp}`);
+}
 
-        // 적 개체들과의 상호작용
-        curGameState.enemyCreatures.forEach(enemy => {
-            if (!enemy.isAlive) return;
+/** 개체 사망 */
+function killCreature(creature: CreatureInstance) {
+    setCreatureImage(creature, creature.data.die);
+    creature.isAlive = false;
 
-            if (creature.position <= enemy.position + creature.data.attackRange) {
-                isBlocked = true;
-                if (now - creature.lastAttackTime >= creature.data.attackTerm) {
-                    creature.lastAttackTime = now;
-                    const creatureImg = document.querySelector(`#${creature.element.id} img`);
-                    if (creatureImg != null && creatureImg instanceof HTMLImageElement) {
-                        creatureImg.src = creature.data.attack;
-                    }
-                    enemy.damaged(creature.data.attackDamage, enemy.isPlayer);
-                }
-            }
-        });
+    setTimeout(() => {
+        creature.element.remove();
+    }, REMOVE_DEAD_CREATURE_DELAY);
+}
 
-        // 적 베이스와의 상호작용
-        if (!isBlocked && creature.position - creature.data.attackRange <= enemyBase.clientWidth) {
-            isBlocked = true;
-            if (curGameState.enemyHp > 0) {
-                if (now - creature.lastAttackTime >= creature.data.attackTerm) {
-                    creature.lastAttackTime = now;
-                    const creatureImg = document.querySelector(`#${creature.element.id} img`);
-                    if (creatureImg != null && creatureImg instanceof HTMLImageElement) {
-                        creatureImg.src = creature.data.attack;
-                    }
-                    curGameState.enemyHp -= creature.data.attackDamage;
-                    console.log(`Enemy base takes ${creature.data.attackDamage} damage! Enemy HP: ${curGameState.enemyHp}`);
-                }
-            }
-        }
+/** 현재 코스트 텍스트 가시화 */
+function updateCost() {
+    costSpan.textContent = `Current Cost: ${Math.floor(gameState.cost)}`;
+}
 
-        // 이동 처리 (어떤 개체도 막지 않을 때만 이동)
-        else if (!isBlocked) {
-            const creatureImg = document.querySelector(`#${creature.element.id} img`);
-            if (creatureImg != null && creatureImg instanceof HTMLImageElement) {
-                creatureImg.src = creature.data.idle;
-            }
-            creature.position -= creature.data.moveSpeed * deltaTime;
-            let creatureElement = creature.element;
-            if (creatureElement) {
-                creatureElement.style.left = `${creature.position}px`;
-            }
-        }
-    });
+/** 스테이지 루프 */
+function gameLoop(now: number) {
+    const deltaTime = (now - lastTime) / 1000;
+    lastTime = now;
 
-    curGameState.enemyCreatures.forEach(creature => {
-        if (!creature.isAlive) return;
-        var isBlocked = false;
-
-        // 플레이어 개체들과의 상호작용
-        curGameState.playerCreatures.forEach(player => {
-            if (!player.isAlive) return;
-            if (creature.position > player.position - creature.data.attackRange) {
-                isBlocked = true;
-                if (now - creature.lastAttackTime >= creature.data.attackTerm) {
-                    creature.lastAttackTime = now;
-                    const creatureImg = document.querySelector(`#${creature.element.id} img`);
-                    if (creatureImg != null && creatureImg instanceof HTMLImageElement) {
-                        creatureImg.src = creature.data.attack;
-                    }
-                    player.damaged(creature.data.attackDamage, player.isPlayer);
-                    isBlocked = true;
-                }
-            }
-        });
-
-        // 플레이어 베이스와의 상호작용
-        if (!isBlocked && creature.position + creature.data.attackRange >= field.clientWidth - playerBase.clientWidth - playerBase.clientWidth) {
-            isBlocked = true;
-            if (curGameState.playerHp > 0) {
-                if (now - creature.lastAttackTime >= creature.data.attackTerm) {
-                    creature.lastAttackTime = now;
-                    const creatureImg = document.querySelector(`#${creature.element.id} img`);
-                    if (creatureImg != null && creatureImg instanceof HTMLImageElement) {
-                        creatureImg.src = creature.data.attack;
-                    }
-                    curGameState.playerHp -= creature.data.attackDamage;
-                    console.log(`Player base takes ${creature.data.attackDamage} damage! Player HP: ${curGameState.playerHp}`);
-                }
-            }
-        }
-
-        // 이동 처리 (어떤 개체도 막지 않을 때만 이동)
-        else if (!isBlocked) {
-            const creatureImg = document.querySelector(`#${creature.element.id} img`);
-            if (creatureImg != null && creatureImg instanceof HTMLImageElement) {
-                creatureImg.src = creature.data.idle;
-            }
-            creature.position += creature.data.moveSpeed * deltaTime;
-            let creatureElement = creature.element;
-            if (creatureElement) {
-                creatureElement.style.left = `${creature.position}px`;
-            }
-        }
-    });
+    gainCost(deltaTime);
+    spawnQueuedEnemies(now);
+    updateCreatures(gameState.playerCreatures, gameState.enemyCreatures, true, now, deltaTime);
+    updateCreatures(gameState.enemyCreatures, gameState.playerCreatures, false, now, deltaTime);
 
     requestAnimationFrame(gameLoop);
 }
 
+/** 코스트 획득 */
+function gainCost(deltaTime: number) {
+    gameState.cost += playerConfig.costPerSec * deltaTime;
+    updateCost();
+}
+
+/** 큐에 있는 에너미 소환 처리 */
+function spawnQueuedEnemies(now: number) {
+    if (enemyQueue.length === 0 || now < enemyQueue[0].timing) {
+        return;
+    }
+
+    const enemyData = enemyQueue.shift();
+    const target = creaturesData.find((creature) => creature.id === enemyData?.id);
+
+    if (target && enemyData) {
+        summonCreature(target, false);
+        console.log(`Enemy ${enemyData.id} appears!`);
+    }
+}
+
+/** 개체 업데이트 */
+function updateCreatures(
+    creatures: CreatureInstance[],
+    opponents: CreatureInstance[],
+    isPlayerSide: boolean,
+    now: number,
+    deltaTime: number,
+) {
+    creatures.forEach((creature) => {
+        if (!creature.isAlive) {
+            return;
+        }
+
+        const isBlockedByCreature = attackFirstOpponentInRange(creature, opponents, isPlayerSide, now);
+        const isBlockedByBase = !isBlockedByCreature && attackBaseIfInRange(creature, isPlayerSide, now);
+
+        if (!isBlockedByCreature && !isBlockedByBase) {
+            moveCreature(creature, isPlayerSide, deltaTime);
+        }
+    });
+}
+
+function attackFirstOpponentInRange(
+    creature: CreatureInstance,
+    opponents: CreatureInstance[],
+    isPlayerSide: boolean,
+    now: number,
+): boolean {
+    const target = opponents.find((opponent) => {
+        if (!opponent.isAlive) {
+            return false;
+        }
+
+        return isPlayerSide
+            ? creature.position <= opponent.position + creature.data.attackRange
+            : creature.position > opponent.position - creature.data.attackRange;
+    });
+
+    if (!target) {
+        return false;
+    }
+
+    attackCreature(creature, target, now);
+    return true;
+}
+
+function attackBaseIfInRange(creature: CreatureInstance, isPlayerSide: boolean, now: number): boolean {
+    const isBaseInRange = isPlayerSide
+        ? creature.position - creature.data.attackRange <= enemyBase.clientWidth
+        : creature.position + creature.data.attackRange >= field.clientWidth - playerBase.clientWidth - playerBase.clientWidth;
+
+    if (!isBaseInRange) {
+        return false;
+    }
+
+    attackBase(creature, isPlayerSide, now);
+    return true;
+}
+
+function attackCreature(attacker: CreatureInstance, target: CreatureInstance, now: number) {
+    if (!canAttack(attacker, now)) {
+        return;
+    }
+
+    attacker.lastAttackTime = now;
+    setCreatureImage(attacker, attacker.data.attack);
+    target.damaged(attacker.data.attackDamage);
+}
+
+function attackBase(creature: CreatureInstance, isPlayerSide: boolean, now: number) {
+    if (!canAttack(creature, now)) {
+        return;
+    }
+
+    creature.lastAttackTime = now;
+    setCreatureImage(creature, creature.data.attack);
+
+    if (isPlayerSide && gameState.enemyHp > 0) {
+        gameState.enemyHp -= creature.data.attackDamage;
+        console.log(`Enemy base takes ${creature.data.attackDamage} damage! Enemy HP: ${gameState.enemyHp}`);
+    }
+
+    if (!isPlayerSide && gameState.playerHp > 0) {
+        gameState.playerHp -= creature.data.attackDamage;
+        console.log(`Player base takes ${creature.data.attackDamage} damage! Player HP: ${gameState.playerHp}`);
+    }
+}
+
+function canAttack(creature: CreatureInstance, now: number): boolean {
+    return now - creature.lastAttackTime >= creature.data.attackTerm;
+}
+
+function moveCreature(creature: CreatureInstance, isPlayerSide: boolean, deltaTime: number) {
+    setCreatureImage(creature, creature.data.idle);
+    creature.position += (isPlayerSide ? -1 : 1) * creature.data.moveSpeed * deltaTime;
+    updateCreaturePosition(creature);
+}
+
+function updateCreaturePosition(creature: CreatureInstance) {
+    creature.element.style.left = `${creature.position}px`;
+}
+
+function setCreatureImage(creature: CreatureInstance, src: string) {
+    const creatureImg = creature.element.querySelector("img");
+
+    if (creatureImg instanceof HTMLImageElement) {
+        creatureImg.src = src;
+    }
+}
+
+function setCreatureImageDirection(creature: CreatureInstance) {
+    const creatureImg = creature.element.querySelector("img");
+
+    if (creatureImg instanceof HTMLImageElement && !creature.isPlayer) {
+        creatureImg.style.transform = "scaleX(-1)";
+    }
+}
+
 async function initGame() {
     try {
-        // 1. 데이터를 먼저 불러와서 배열에 저장
         creaturesData = await loadCreatureData();
         console.log("Creature data loaded:", creaturesData);
-
     } catch (error) {
         console.error("Initialization failed:", error);
     }
 }
 
-// 게임 실행
 initGame();
