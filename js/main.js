@@ -30,20 +30,16 @@ var e = [
         timing: 5000
     }
 ];
-var dummy = {
-    id: "dummy",
-    name: "더미",
-    idle: "./img/dummy_idle.png",
-    attack: "./img/dummy_attack.png",
-    die: "./img/dummy_die.png",
-    moveSpeed: 10,
-    attackRange: 50,
-    attackTerm: 1000,
-    attackDamage: 10,
-    coolTime: 1000,
-    cost: 1,
-    maxHp: 100
-};
+async function loadCreatureData() {
+    const response = await fetch(`./json/creatures.json`);
+    if (!response.ok) {
+        throw new Error(`Failed to load creature data: creatures.json`);
+    }
+    // json()은 이제 creatureStructure[] 타입을 반환합니다.
+    return await response.json();
+}
+var creaturesData = [];
+var dummy;
 var setCreature = (creature, isPlayer) => {
     if (isPlayer && curGameState.cost < creature.cost) {
         console.log(`Not enough cost to set ${creature.name}!`);
@@ -214,4 +210,31 @@ function gameLoop(now) {
     });
     requestAnimationFrame(gameLoop);
 }
-requestAnimationFrame(gameLoop);
+async function initGame() {
+    try {
+        // 1. 데이터를 먼저 불러와서 배열에 저장
+        creaturesData = await loadCreatureData();
+        console.log("Creature data loaded:", creaturesData);
+        // 2. 불러온 배열에서 필요한 데이터(dummy) 추출
+        const foundDummy = creaturesData.find(c => c.id === "dummy");
+        if (foundDummy) {
+            dummy = foundDummy;
+        }
+        else {
+            throw new Error("Dummy data not found in JSON");
+        }
+        // 3. 데이터 로드가 완료된 후에 이벤트 리스너 등록
+        const btn = document.getElementById("btn");
+        btn.addEventListener("click", () => {
+            if (dummy)
+                setCreature(dummy, true);
+        });
+        // 4. 게임 루프 시작
+        requestAnimationFrame(gameLoop);
+    }
+    catch (error) {
+        console.error("Initialization failed:", error);
+    }
+}
+// 게임 실행
+initGame();
