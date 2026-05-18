@@ -12,7 +12,7 @@
         "coolTime": 1000,
         "cost": 10,
         "maxHp": 100,
-        "canAttackMultiple": false
+        "canAttackMultipleTargets": false
     },
     {
         "id": "dummy2",
@@ -27,6 +27,6 @@
         "coolTime": 1000,
         "cost": 1,
         "maxHp": 100,
-        "canAttackMultiple": true
+        "canAttackMultipleTargets": true
     }
 ]

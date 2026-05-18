@@ -98,7 +98,7 @@ export function updateCreatures(creatures, opponents, isPlayerSide, now, deltaTi
         if (!creature.isAlive) {
             return;
         }
-        const isBlockedByCreature = attackFirstOpponentInRange(creature, opponents, isPlayerSide, now);
+        const isBlockedByCreature = attackOpponentsInRange(creature, opponents, isPlayerSide, now);
         const isBlockedByBase = !isBlockedByCreature && attackBaseIfInRange(gameState, creature, isPlayerSide, now);
         if (!isBlockedByCreature && !isBlockedByBase) {
             moveCreature(creature, isPlayerSide, deltaTime);
@@ -106,8 +106,17 @@ export function updateCreatures(creatures, opponents, isPlayerSide, now, deltaTi
     });
 }
 /** 공격 범위 내 상대 개체 공격 */
-function attackFirstOpponentInRange(creature, opponents, isPlayerSide, now) {
-    const targets = opponents.filter((opponent) => {
+function attackOpponentsInRange(creature, opponents, isPlayerSide, now) {
+    const targets = getAttackableOpponents(creature, opponents, isPlayerSide);
+    if (targets.length <= 0) {
+        return false;
+    }
+    attackCreatures(creature, getAttackTargets(creature, targets), now);
+    return true;
+}
+/** 공격 가능한 상대 개체 목록 */
+function getAttackableOpponents(creature, opponents, isPlayerSide) {
+    return opponents.filter((opponent) => {
         if (!opponent.isAlive) {
             return false;
         }
@@ -115,18 +124,10 @@ function attackFirstOpponentInRange(creature, opponents, isPlayerSide, now) {
             ? creature.position <= opponent.position + creature.data.attackRange
             : creature.position > opponent.position - creature.data.attackRange;
     });
-    if (!targets || targets.length <= 0) {
-        return false;
-    }
-    if (creature.data.canAttackMultiple) {
-        targets.forEach((target) => {
-            attackCreature(creature, target, now);
-        });
-    }
-    else {
-        attackCreature(creature, targets[0], now);
-    }
-    return true;
+}
+/** 실제 공격 대상 목록 */
+function getAttackTargets(creature, targets) {
+    return creature.data.canAttackMultipleTargets ? targets : targets.slice(0, 1);
 }
 /** 베이스 공격 범위 확인 */
 function attackBaseIfInRange(gameState, creature, isPlayerSide, now) {
@@ -140,13 +141,15 @@ function attackBaseIfInRange(gameState, creature, isPlayerSide, now) {
     return true;
 }
 /** 개체 공격 처리 */
-function attackCreature(attacker, target, now) {
+function attackCreatures(attacker, targets, now) {
     if (!canAttack(attacker, now)) {
         return;
     }
     attacker.lastAttackTime = now;
     setCreatureImage(attacker, attacker.data.attack);
-    target.damaged(attacker.data.attackDamage);
+    targets.forEach((target) => {
+        target.damaged(attacker.data.attackDamage);
+    });
 }
 /** 베이스 공격 처리 */
 function attackBase(gameState, creature, isPlayerSide, now) {
