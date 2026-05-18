@@ -87,7 +87,7 @@ function damageCreature(creature, damage) {
         killCreature(creature);
     }
     creature.position += creature.isPlayer ? KNOCKBACK_DISTANCE : -KNOCKBACK_DISTANCE;
-    const hpBar = creature.element.querySelector("img")?.querySelector("div");
+    const hpBar = document.getElementById(creature.element.id + "_hp");
     if (hpBar) {
         hpBar.style.width = Math.floor((creature.hp / creature.data.maxHp * 100)) + "%";
     }
