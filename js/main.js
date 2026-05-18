@@ -107,17 +107,17 @@ var setCreature = (creature, isPlayer) => {
         creatureElement.className = "creature";
         creatureElement.style.left = `${newCreature.position}px`;
         creatureElement.innerHTML = `<img src="${newCreature.data.idle}" alt="${newCreature.data.name}" ${!isPlayer ? "style='transform: scaleX(-1);'" : ""}>`;
-        creatureElement.innerHTML += `<button onclick="attackedCreature('${newCreature.element.id}',10)">Attacked</button>`;
+        //creatureElement.innerHTML += `<button onclick="attackedCreature('${newCreature.element.id}',10)">Attacked</button>`;
         field.appendChild(creatureElement);
         console.log(`Set ${newCreature.data.name} to field!`);
     }
 };
-var attackedCreature = (creatureId, damage) => {
-    const creature = curGameState.playerCreatures.find(c => c.element.id === creatureId);
-    if (creature) {
-        creature.damaged(damage, creature.isPlayer);
-    }
-};
+// var attackedCreature = (creatureId: string, damage: number) => {
+//     const creature = curGameState.playerCreatures.find(c => c.element.id === creatureId);
+//     if (creature) {
+//         creature.damaged(damage, creature.isPlayer);
+//     }
+// }
 function gameLoop(now) {
     const deltaTime = (now - lastTime) / 1000; // 초 단위로 변환
     lastTime = now;
