@@ -86,12 +86,13 @@ function renderCreature(creature: CreatureInstance, sameSideCreatures: CreatureI
     creature.element.id = `${sidePrefix}-${creature.data.id}-${count}`;
     creature.element.className = "creature";
     creature.element.style.left = `${creature.position}px`;
-    creature.element.innerHTML = `<img src="${creature.data.idle}" alt="${creature.data.name}">`;
     var hpDiv = document.createElement("div");
     hpDiv.id = creature.element.id+"_hp";
-    hpDiv.style.width = "100px"
+    hpDiv.style.width = "100%"
+    hpDiv.style.height = "10px"
     hpDiv.style.backgroundColor = "red";
     creature.element.appendChild(hpDiv);
+    creature.element.innerHTML += `<img src="${creature.data.idle}" alt="${creature.data.name}">`;
     setCreatureImageDirection(creature);
     field.appendChild(creature.element);
 }
@@ -105,6 +106,10 @@ function damageCreature(creature: CreatureInstance, damage: number) {
     }
 
     creature.position += creature.isPlayer ? KNOCKBACK_DISTANCE : -KNOCKBACK_DISTANCE;
+    const hpBar = creature.element.querySelector("img")?.querySelector("div");
+    if (hpBar) {
+        hpBar.style.width = Math.floor((creature.hp / creature.data.maxHp * 100)) + "%";
+    }
     updateCreaturePosition(creature);
     console.log(`${creature.data.name} takes ${damage} damage! Current HP: ${creature.hp}`);
 }
