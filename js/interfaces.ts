@@ -11,6 +11,7 @@ export interface CreatureData {
     coolTime: number;
     cost: number;
     maxHp: number;
+    canAttackMultiple: boolean;
 }
 
 export interface CreatureInstance {

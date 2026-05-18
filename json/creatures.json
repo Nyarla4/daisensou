@@ -11,7 +11,8 @@
         "attackDamage": 10,
         "coolTime": 1000,
         "cost": 10,
-        "maxHp": 100
+        "maxHp": 100,
+        "canAttackMultiple": false
     },
     {
         "id": "dummy2",
@@ -25,6 +26,7 @@
         "attackDamage": 10,
         "coolTime": 1000,
         "cost": 1,
-        "maxHp": 100
+        "maxHp": 100,
+        "canAttackMultiple": true
     }
 ]

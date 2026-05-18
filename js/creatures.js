@@ -105,7 +105,7 @@ export function updateCreatures(creatures, opponents, isPlayerSide, now, deltaTi
         }
     });
 }
-/** 공격 범위 내 첫 상대 개체 공격 */
+/** 공격 범위 내 상대 개체 공격 */
 function attackFirstOpponentInRange(creature, opponents, isPlayerSide, now) {
     const targets = opponents.filter((opponent) => {
         if (!opponent.isAlive) {
@@ -115,12 +115,17 @@ function attackFirstOpponentInRange(creature, opponents, isPlayerSide, now) {
             ? creature.position <= opponent.position + creature.data.attackRange
             : creature.position > opponent.position - creature.data.attackRange;
     });
-    if (!targets) {
+    if (!targets || targets.length <= 0) {
         return false;
     }
-    targets.forEach((target) => {
-        attackCreature(creature, target, now);
-    });
+    if (creature.data.canAttackMultiple) {
+        targets.forEach((target) => {
+            attackCreature(creature, target, now);
+        });
+    }
+    else {
+        attackCreature(creature, targets[0], now);
+    }
     return true;
 }
 /** 베이스 공격 범위 확인 */
