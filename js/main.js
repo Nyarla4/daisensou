@@ -136,12 +136,13 @@ function gameLoop(now) {
     curGameState.playerCreatures.forEach(creature => {
         if (!creature.isAlive)
             return; // 죽은 개체는 행동하지 않음
-        var attacked = false;
+        var isBlocked = false;
+        // 적 개체들과의 상호작용
         curGameState.enemyCreatures.forEach(enemy => {
             if (!enemy.isAlive)
                 return;
-            const distance = Math.abs(creature.position - enemy.position);
-            if (distance <= creature.data.attackRange) {
+            if (creature.position <= enemy.position + creature.data.attackRange) {
+                isBlocked = true;
                 if (now - creature.lastAttackTime >= creature.data.attackTerm) {
                     creature.lastAttackTime = now;
                     const creatureImg = document.querySelector(`#${creature.element.id} img`);
@@ -149,11 +150,12 @@ function gameLoop(now) {
                         creatureImg.src = creature.data.attack;
                     }
                     enemy.damaged(creature.data.attackDamage, enemy.isPlayer);
-                    attacked = true;
                 }
             }
         });
-        if (creature.position - creature.data.attackRange <= enemyBase.clientWidth) {
+        // 적 베이스와의 상호작용
+        if (!isBlocked && creature.position - creature.data.attackRange <= enemyBase.clientWidth) {
+            isBlocked = true;
             if (curGameState.enemyHp > 0) {
                 if (now - creature.lastAttackTime >= creature.data.attackTerm) {
                     creature.lastAttackTime = now;
@@ -166,7 +168,8 @@ function gameLoop(now) {
                 }
             }
         }
-        else if (!attacked) {
+        // 이동 처리 (어떤 개체도 막지 않을 때만 이동)
+        else if (!isBlocked) {
             const creatureImg = document.querySelector(`#${creature.element.id} img`);
             if (creatureImg != null && creatureImg instanceof HTMLImageElement) {
                 creatureImg.src = creature.data.idle;
@@ -181,12 +184,13 @@ function gameLoop(now) {
     curGameState.enemyCreatures.forEach(creature => {
         if (!creature.isAlive)
             return;
-        var attacked = false;
+        var isBlocked = false;
+        // 플레이어 개체들과의 상호작용
         curGameState.playerCreatures.forEach(player => {
             if (!player.isAlive)
                 return;
-            const distance = Math.abs(creature.position - player.position);
-            if (distance <= creature.data.attackRange) {
+            if (creature.position > player.position - creature.data.attackRange) {
+                isBlocked = true;
                 if (now - creature.lastAttackTime >= creature.data.attackTerm) {
                     creature.lastAttackTime = now;
                     const creatureImg = document.querySelector(`#${creature.element.id} img`);
@@ -194,11 +198,13 @@ function gameLoop(now) {
                         creatureImg.src = creature.data.attack;
                     }
                     player.damaged(creature.data.attackDamage, player.isPlayer);
-                    attacked = true;
+                    isBlocked = true;
                 }
             }
         });
-        if (creature.position + creature.data.attackRange >= field.clientWidth - playerBase.clientWidth - playerBase.clientWidth) {
+        // 플레이어 베이스와의 상호작용
+        if (!isBlocked && creature.position + creature.data.attackRange >= field.clientWidth - playerBase.clientWidth - playerBase.clientWidth) {
+            isBlocked = true;
             if (curGameState.playerHp > 0) {
                 if (now - creature.lastAttackTime >= creature.data.attackTerm) {
                     creature.lastAttackTime = now;
@@ -211,7 +217,8 @@ function gameLoop(now) {
                 }
             }
         }
-        else if (!attacked) {
+        // 이동 처리 (어떤 개체도 막지 않을 때만 이동)
+        else if (!isBlocked) {
             const creatureImg = document.querySelector(`#${creature.element.id} img`);
             if (creatureImg != null && creatureImg instanceof HTMLImageElement) {
                 creatureImg.src = creature.data.idle;
