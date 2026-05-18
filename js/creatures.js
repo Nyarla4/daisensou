@@ -107,7 +107,7 @@ export function updateCreatures(creatures, opponents, isPlayerSide, now, deltaTi
 }
 /** 공격 범위 내 첫 상대 개체 공격 */
 function attackFirstOpponentInRange(creature, opponents, isPlayerSide, now) {
-    const target = opponents.find((opponent) => {
+    const targets = opponents.filter((opponent) => {
         if (!opponent.isAlive) {
             return false;
         }
@@ -115,10 +115,12 @@ function attackFirstOpponentInRange(creature, opponents, isPlayerSide, now) {
             ? creature.position <= opponent.position + creature.data.attackRange
             : creature.position > opponent.position - creature.data.attackRange;
     });
-    if (!target) {
+    if (!targets) {
         return false;
     }
-    attackCreature(creature, target, now);
+    targets.forEach((target) => {
+        attackCreature(creature, target, now);
+    });
     return true;
 }
 /** 베이스 공격 범위 확인 */

@@ -145,7 +145,7 @@ function attackFirstOpponentInRange(
     isPlayerSide: boolean,
     now: number,
 ): boolean {
-    const target = opponents.find((opponent) => {
+    const targets = opponents.filter((opponent) => {
         if (!opponent.isAlive) {
             return false;
         }
@@ -155,11 +155,12 @@ function attackFirstOpponentInRange(
             : creature.position > opponent.position - creature.data.attackRange;
     });
 
-    if (!target) {
+    if (!targets) {
         return false;
     }
-
-    attackCreature(creature, target, now);
+    targets.forEach((target) => {
+        attackCreature(creature, target, now);
+    })
     return true;
 }
 
