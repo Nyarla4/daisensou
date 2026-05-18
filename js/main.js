@@ -1,10 +1,7 @@
-"use strict";
-var btnContainer = document.getElementById("btn-container"); // 버튼 컨테이너
-var stageBtn = document.getElementById("stage-btn"); // 스테이지 시작 버튼
+import { btnContainer, stageBtn, titleScreen, stageScreen, field, playerBase, costSpan, enemyBase } from "./elements.js";
 stageBtn.addEventListener("click", () => {
-    document.getElementById("title")?.classList.remove("active"); // 타이틀 숨기기
-    document.getElementById("stage")?.classList.add("active"); // 스테이지 표시
-    var btnContainer = document.getElementById("btn-container");
+    titleScreen.classList.remove("active"); // 타이틀 숨기기
+    stageScreen.classList.add("active"); // 스테이지 표시
     if (btnContainer != null) {
         creaturesData.forEach(creature => {
             const creatureBtn = document.createElement("button");
@@ -19,11 +16,7 @@ stageBtn.addEventListener("click", () => {
     }
     requestAnimationFrame(gameLoop);
 });
-var costSpan = document.getElementById("cost"); // 코스트 표시
 var lastTime = performance.now(); // 마지막 프레임 시간
-var field = document.getElementById("field"); // 필드 요소
-var enemyBase = document.getElementById("enemyBase");
-var playerBase = document.getElementById("playerBase");
 var curGameState = {
     cost: 0,
     playerHp: 100,
