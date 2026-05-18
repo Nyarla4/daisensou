@@ -71,6 +71,11 @@ function renderCreature(creature, sameSideCreatures) {
     creature.element.className = "creature";
     creature.element.style.left = `${creature.position}px`;
     creature.element.innerHTML = `<img src="${creature.data.idle}" alt="${creature.data.name}">`;
+    var hpDiv = document.createElement("div");
+    hpDiv.id = creature.element.id + "_hp";
+    hpDiv.style.width = "100px";
+    hpDiv.style.backgroundColor = "red";
+    creature.element.appendChild(hpDiv);
     setCreatureImageDirection(creature);
     field.appendChild(creature.element);
 }
