@@ -38,4 +38,5 @@
 }
 .creature {
     position: absolute;
+    bottom: 0;
 }
