@@ -1,5 +1,11 @@
 "use strict";
 var btnContainer = document.getElementById("btn-container"); // 버튼 컨테이너
+var stageBtn = document.getElementById("stage-btn"); // 스테이지 시작 버튼
+stageBtn.addEventListener("click", () => {
+    document.getElementById("title")?.classList.remove("active"); // 타이틀 숨기기
+    document.getElementById("stage")?.classList.add("active"); // 스테이지 표시
+    requestAnimationFrame(gameLoop);
+});
 var costSpan = document.getElementById("cost"); // 코스트 표시
 var lastTime = performance.now(); // 마지막 프레임 시간
 var field = document.getElementById("field"); // 필드 요소
@@ -211,8 +217,6 @@ async function initGame() {
         // 1. 데이터를 먼저 불러와서 배열에 저장
         creaturesData = await loadCreatureData();
         console.log("Creature data loaded:", creaturesData);
-        // 4. 게임 루프 시작
-        requestAnimationFrame(gameLoop);
     }
     catch (error) {
         console.error("Initialization failed:", error);
