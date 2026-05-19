@@ -71,6 +71,7 @@ function renderCreature(creature, sameSideCreatures) {
     creature.element.id = `${sidePrefix}-${creature.data.id}-${count}`;
     creature.element.className = "creature";
     creature.element.style.left = `${creature.position}px`;
+    creature.element.style.bottom = (Math.floor(Math.random() * 3) * 10) + "px"; // 개체마다 약간씩 위치 달리해서 겹치는 느낌 완화
     // var hpDiv = document.createElement("div");
     // hpDiv.id = creature.element.id+"_hp";
     // hpDiv.style.width = "100%"
