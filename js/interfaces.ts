@@ -28,6 +28,7 @@ export interface CreatureInstance {
 export interface GameState {
     cost: number;
     playerHp: number;
+    playerMaxHp: number;
     enemyHp: number;
     playerCreatures: CreatureInstance[];
     enemyCreatures: CreatureInstance[];
@@ -36,15 +37,19 @@ export interface GameState {
 
 export interface PlayerState {
     currency: number;
-    upgrades: {
-        costPerSec: number,
-        rewardMultiplier: number,
-        currentHp: number
-    },
-    creatureLevels: {
-        [key: string]: number
-    },
-    clearedStages: string[]
+    upgrades: PlayerUpgrades;
+    creatureLevels: CreatureLevels;
+    clearedStages: string[];
+}
+
+export interface PlayerUpgrades {
+    costPerSec: number;
+    rewardMultiplier: number;
+    currentHp: number;
+}
+
+export interface CreatureLevels {
+    [key: string]: number;
 }
 
 export interface EnemySpawn {

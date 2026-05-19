@@ -1,6 +1,5 @@
 import { creatureBtnContainer, enemyBase, enemyHp, field, playerBase, playerHp } from "./elements.js";
 import { CreatureData, CreatureInstance, GameState } from "./interfaces.js";
-import { playerConfig } from "./main.js";
 
 /** 개체 사망 후 사라지기까지 시간 */
 const REMOVE_DEAD_CREATURE_DELAY = 5000;
@@ -26,10 +25,10 @@ export async function loadCreatureData() {
 }
 
 /** 개체 소환 버튼 */
-export function renderCreatureButtons(gameState: GameState, updateCost: () => void) {
+export function renderCreatureButtons(gameState: GameState, canUseCreature: (creature: CreatureData) => boolean, updateCost: () => void) {
     creatureBtnContainer.replaceChildren();
 
-    creaturesData.forEach((creature) => {
+    creaturesData.filter(canUseCreature).forEach((creature) => {
         const creatureBtn = document.createElement("button");
         creatureBtn.textContent = creature.name;
         creatureBtn.classList.add("btn", "btn-primary");
@@ -240,7 +239,7 @@ function attackBase(gameState: GameState, creature: CreatureInstance, isPlayerSi
 
     if (!isPlayerSide && gameState.playerHp > 0) {
         gameState.playerHp -= creature.data.attackDamage;
-        playerHp.textContent = `${gameState.playerHp}/${playerConfig.upgrades.currentHp}`;
+        playerHp.textContent = `${gameState.playerHp}/${gameState.playerMaxHp}`;
         console.log(`Player base takes ${creature.data.attackDamage} damage! Player HP: ${gameState.playerHp}`);
     }
 }

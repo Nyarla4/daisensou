@@ -1,6 +1,7 @@
 import { backBtn, closeSettingsBtn, costSpan, enemyHp, field, playerHp, settingBtn, settingsModal, stageBtn, stageScreen, titleScreen, upgradeBtn, upgradeScreen } from "./elements.js";
 import { creaturesData, loadCreatureData, renderCreatureButtons, summonCreature, updateCreatures } from "./creatures.js";
-import { EnemySpawn, GameState, PlayerState, StageData } from "./interfaces.js";
+import { EnemySpawn, GameState, StageData } from "./interfaces.js";
+import { canUseCreature, loadPlayerData, playerState, rewardStageClear } from "./player.js";
 import { loadStageData, renderStageButtons, showInStage, showStageSelector } from "./stages.js";
 
 /** deltaTime 계산용 변수 */
@@ -24,25 +25,11 @@ let gameLoopId: number = 0;
 const gameState: GameState = {
     cost: 0,
     playerHp: 100,
+    playerMaxHp: 100,
     enemyHp: 100,
     playerCreatures: [],
     enemyCreatures: [],
     stageData: {} as StageData
-};
-
-/** 현재 플레이어 상태 */
-export const playerConfig: PlayerState = {
-    currency: 100,
-    upgrades: {
-        costPerSec: 1,
-        rewardMultiplier: 1,
-        currentHp: 100
-    },
-    creatureLevels: {
-        dummy: 0,
-        dummy2: 1
-    },
-    clearedStages: ["1"]
 };
 
 /** 스테이지 버튼 클릭 시 스테이지 선택 화면 표시 */
@@ -92,7 +79,7 @@ async function openStageSelect() {
 function startStage(stageData: StageData) {
     showInStage();
     resetGameState(stageData);
-    renderCreatureButtons(gameState, updateCost);
+    renderCreatureButtons(gameState, canUseCreature, updateCost);
     field.style.width = `${gameState.stageData.stageDistance}px`;
 
     lastTime = performance.now();
@@ -106,8 +93,9 @@ function startStage(stageData: StageData) {
 /** 스테이지 데이터 기준 게임 상태 초기화 */
 function resetGameState(stageData: StageData) {
     gameState.cost = 0;
-    gameState.playerHp = playerConfig.upgrades.currentHp;
-    playerHp.textContent = `${gameState.playerHp}/${playerConfig.upgrades.currentHp}`;
+    gameState.playerMaxHp = playerState.upgrades.currentHp;
+    gameState.playerHp = gameState.playerMaxHp;
+    playerHp.textContent = `${gameState.playerHp}/${gameState.playerMaxHp}`;
     gameState.enemyHp = stageData.enemyHp;
     enemyHp.textContent = `${gameState.enemyHp}/${stageData.enemyHp}`;
     gameState.playerCreatures = [];
@@ -141,7 +129,7 @@ function gameLoop(now: number) {
 
 /** 코스트 획득 */
 function gainCost(deltaTime: number) {
-    gameState.cost += playerConfig.upgrades.costPerSec * deltaTime;
+    gameState.cost += playerState.upgrades.costPerSec * deltaTime;
     updateCost();
 }
 
@@ -170,10 +158,7 @@ function checkGameOver(stageData: StageData) {
     } else if (gameState.enemyHp <= 0) {
         alert("Congratulations! You won!");
         isGameRunning = false;
-        if (!playerConfig.clearedStages.includes(stageData.id)) {
-            playerConfig.clearedStages.push(stageData.id);
-        }
-        playerConfig.currency += stageData.reward; // 스테이지 클리어 보상
+        rewardStageClear(stageData);
         cancelAnimationFrame(gameLoopId);
         openStageSelect();
     }
@@ -182,7 +167,7 @@ function checkGameOver(stageData: StageData) {
 /** 게임 초기화 */
 async function initGame() {
     try {
-        await Promise.all([loadCreatureData(), loadStageData()]);
+        await Promise.all([loadCreatureData(), loadStageData(), loadPlayerData()]);
         console.log("Creature data loaded:", creaturesData);
     } catch (error) {
         console.error("Initialization failed:", error);
