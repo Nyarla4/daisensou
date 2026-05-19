@@ -11,6 +11,7 @@ let isGameRunning = false;
 let enemyQueue = [];
 /** 게임 데이터 로드 Promise */
 let gameDataReady;
+let gameLoopId = 0;
 /** 현재 게임 상태 */
 const gameState = {
     cost: 0,
@@ -56,7 +57,7 @@ function startStage(stageData) {
     stageStartTime = lastTime;
     if (!isGameRunning) {
         isGameRunning = true;
-        requestAnimationFrame(gameLoop);
+        gameLoopId = requestAnimationFrame(gameLoop);
     }
 }
 /** 스테이지 데이터 기준 게임 상태 초기화 */
@@ -108,6 +109,7 @@ function checkGameOver(stageData) {
     if (gameState.playerHp <= 0) {
         alert("Game Over! You lost.");
         isGameRunning = false;
+        cancelAnimationFrame(gameLoopId);
         openStageSelect();
     }
     else if (gameState.enemyHp <= 0) {
@@ -117,6 +119,7 @@ function checkGameOver(stageData) {
             playerConfig.clearedStages.push(stageData.id);
         }
         playerConfig.currency += stageData.reward; // 스테이지 클리어 보상
+        cancelAnimationFrame(gameLoopId);
         openStageSelect();
     }
 }
