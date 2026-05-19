@@ -22,3 +22,5 @@ export const upgradeScreen = getElement("upgrade");
 export const upgradeBtnContainer = getElement("upgrade-btn-list");
 export const backBtn = getElement("back-btn"); // 스테이지 선택>타이틀, 업그레이드>타이틀 공통
 export const settingBtn = getElement("setting-btn");
+export const settingsModal = getElement("settings");
+export const closeSettingsBtn = getElement("close-settings");

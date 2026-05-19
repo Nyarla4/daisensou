@@ -1,4 +1,4 @@
-import { backBtn, costSpan, enemyHp, field, playerHp, stageBtn, stageScreen, titleScreen, upgradeBtn, upgradeScreen } from "./elements.js";
+import { backBtn, closeSettingsBtn, costSpan, enemyHp, field, playerHp, settingBtn, settingsModal, stageBtn, stageScreen, titleScreen, upgradeBtn, upgradeScreen } from "./elements.js";
 import { creaturesData, loadCreatureData, renderCreatureButtons, summonCreature, updateCreatures } from "./creatures.js";
 import { loadStageData, renderStageButtons, showInStage, showStageSelector } from "./stages.js";
 /** deltaTime 계산용 변수 */
@@ -44,6 +44,7 @@ upgradeBtn.addEventListener("click", () => {
     titleScreen.classList.remove("active");
     upgradeScreen.classList.add("active");
 });
+/** 뒤로 버튼 클릭 시 */
 backBtn.addEventListener("click", () => {
     if (stageScreen.classList.contains("active")) {
         stageScreen.classList.remove("active");
@@ -52,6 +53,16 @@ backBtn.addEventListener("click", () => {
         upgradeScreen.classList.remove("active");
     }
     titleScreen.classList.add("active");
+});
+/** 설정 버튼 클릭 시 */
+settingBtn.addEventListener("click", () => {
+    settingBtn.disabled = true;
+    settingsModal.style.display = "block";
+});
+/** 설정 모달 닫기 버튼 클릭 시 */
+closeSettingsBtn.addEventListener("click", () => {
+    settingsModal.style.display = "none";
+    settingBtn.disabled = false;
 });
 /** 스테이지 선택 화면 열기 */
 async function openStageSelect() {
