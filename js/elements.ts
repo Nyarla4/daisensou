@@ -11,10 +11,15 @@ function getElement<T extends HTMLElement>(id: string): T {
 export const titleScreen = getElement<HTMLDivElement>("title");
 export const stageBtn = getElement<HTMLButtonElement>("stage-btn");
 export const stageScreen = getElement<HTMLDivElement>("stage");
-export const btnContainer = getElement<HTMLDivElement>("btn-container");
+export const creatureBtnContainer = getElement<HTMLDivElement>("creature-btn-list");
 export const stageSelector = getElement<HTMLDivElement>("stageSelector");
 export const inStage = getElement<HTMLDivElement>("inStage");
 export const costSpan = getElement<HTMLSpanElement>("cost");
 export const field = getElement<HTMLDivElement>("field");
 export const enemyBase = getElement<HTMLDivElement>("enemyBase");
 export const playerBase = getElement<HTMLDivElement>("playerBase");
+export const upgradeBtn = getElement<HTMLButtonElement>("upgrade-btn");
+export const upgradeScreen = getElement<HTMLDivElement>("upgrade");
+export const upgradeBtnContainer = getElement<HTMLDivElement>("upgrade-btn-list");
+export const backBtn = getElement<HTMLButtonElement>("back-btn");
+export const settingBtn = getElement<HTMLButtonElement>("setting-btn");

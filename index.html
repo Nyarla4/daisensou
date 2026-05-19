@@ -13,7 +13,8 @@
 <body>
     <div id="title" class="screen active">
         <button id="stage-btn" class="btn btn-secondary">Stages</button>
-        <button class="btn btn-secondary">Setting</button>
+        <button id="upgrade-btn" class="btn btn-secondary">Upgrade</button>
+        <button id="setting-btn" class="btn btn-secondary">Setting</button>
     </div>
     <div id="stage" class="screen">
         <div id="stageSelector" class="innerScreen active">
@@ -26,11 +27,17 @@
             </div>
             <div class="container">
                 <span id="cost">Current Cost: 0</span>
-                <div id="btn-container">
+                <div id="creature-btn-list">
         
                 </div>
             </div>
         </div>
+    </div>
+    <div id="upgrade" class="screen">
+        <div id="upgrade-btn-list">
+
+        </div>
+        <button id="back-btn" class="btn btn-secondary">Back</button>
     </div>
 </body>
 <script src="./js/main.js" type="module"></script>

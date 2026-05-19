@@ -1,4 +1,4 @@
-import { btnContainer, enemyBase, field, playerBase } from "./elements.js";
+import { creatureBtnContainer, enemyBase, field, playerBase } from "./elements.js";
 /** 개체 사망 후 사라지기까지 시간 */
 const REMOVE_DEAD_CREATURE_DELAY = 5000;
 /** 피해시 넉백 거리 */
@@ -19,7 +19,7 @@ export async function loadCreatureData() {
 }
 /** 개체 소환 버튼 */
 export function renderCreatureButtons(gameState, updateCost) {
-    btnContainer.replaceChildren();
+    creatureBtnContainer.replaceChildren();
     creaturesData.forEach((creature) => {
         const creatureBtn = document.createElement("button");
         creatureBtn.textContent = creature.name;
@@ -27,7 +27,7 @@ export function renderCreatureButtons(gameState, updateCost) {
         creatureBtn.addEventListener("click", () => {
             summonCreature(gameState, creature, true, updateCost);
         });
-        btnContainer.appendChild(creatureBtn);
+        creatureBtnContainer.appendChild(creatureBtn);
     });
 }
 /** 개체 소환 함수 */
@@ -70,27 +70,36 @@ function renderCreature(creature, sameSideCreatures) {
     creature.element.id = `${sidePrefix}-${creature.data.id}-${count}`;
     creature.element.className = "creature";
     creature.element.style.left = `${creature.position}px`;
-    var hpDiv = document.createElement("div");
-    hpDiv.id = creature.element.id + "_hp";
-    hpDiv.style.width = "100%";
-    hpDiv.style.height = "10px";
-    hpDiv.style.backgroundColor = "red";
-    creature.element.appendChild(hpDiv);
+    // var hpDiv = document.createElement("div");
+    // hpDiv.id = creature.element.id+"_hp";
+    // hpDiv.style.width = "100%"
+    // hpDiv.style.height = "10px"
+    // hpDiv.style.backgroundColor = "red";
+    // creature.element.appendChild(hpDiv);
     creature.element.innerHTML += `<img src="${creature.data.idle}" alt="${creature.data.name}">`;
     setCreatureImageDirection(creature);
     field.appendChild(creature.element);
 }
 /** 개체 피해 */
 function damageCreature(creature, damage) {
+    var beforeHp = creature.hp;
     creature.hp = Math.max(0, creature.hp - damage);
     if (creature.hp <= 0) {
         killCreature(creature);
     }
-    creature.position += creature.isPlayer ? KNOCKBACK_DISTANCE : -KNOCKBACK_DISTANCE;
-    const hpBar = document.getElementById(creature.element.id + "_hp");
-    if (hpBar) {
-        hpBar.style.width = Math.floor((creature.hp / creature.data.maxHp * 100)) + "%";
+    var afterHp = creature.hp;
+    var hp2 = creature.data.maxHp * 0.2;
+    var hps = [hp2, hp2 * 2, hp2 * 3, hp2 * 4].reverse();
+    for (const hp of hps) {
+        if (beforeHp > hp && afterHp <= hp) {
+            creature.position += creature.isPlayer ? KNOCKBACK_DISTANCE : -KNOCKBACK_DISTANCE;
+            break;
+        }
     }
+    // const hpBar = document.getElementById(creature.element.id+"_hp");
+    // if (hpBar) {
+    //     hpBar.style.width = Math.floor((creature.hp / creature.data.maxHp * 100)) + "%";
+    // }
     updateCreaturePosition(creature);
     console.log(`${creature.data.name} takes ${damage} damage! Current HP: ${creature.hp}`);
 }

@@ -1,0 +1,12 @@
+stage
+└clear: get reward(currency), go stage select screen
+└fail: go stage select screen
+upgrade
+└ordinary creature: use currency, get stronger(level up)
+└new creature: use currency, get to level 1
+creature
+└level < 1: can't use, don't make summon btn
+└level >= 1: can use, set on ordinary creature at upgrade, make summon btn
+
+-------------------------------
+place to save data?
