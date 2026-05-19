@@ -3,7 +3,7 @@
     "upgrades": {
         "costPerSec": 1,
         "rewardMultiplier": 1,
-        "nextUpgrade": 0
+        "currentHp": 100
     },
     "creatureLevels": {
         "dummy": 0,

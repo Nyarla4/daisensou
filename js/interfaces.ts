@@ -39,7 +39,7 @@ export interface PlayerState {
     upgrades: {
         costPerSec: number,
         rewardMultiplier: number,
-        nextUpgrade: number
+        currentHp: number
     },
     creatureLevels: {
         [key: string]: number
@@ -58,4 +58,5 @@ export interface StageData {
     enemies: EnemySpawn[];
     stageDistance: number;
     reward: number;
+    enemyHp: number;
 }

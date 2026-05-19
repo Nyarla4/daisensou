@@ -1,4 +1,4 @@
-import { costSpan, field, stageBtn, stageScreen, titleScreen } from "./elements.js";
+import { costSpan, enemyHp, field, playerHp, stageBtn, stageScreen, titleScreen } from "./elements.js";
 import { creaturesData, loadCreatureData, renderCreatureButtons, summonCreature, updateCreatures } from "./creatures.js";
 import { loadStageData, renderStageButtons, showInStage, showStageSelector } from "./stages.js";
 /** deltaTime 계산용 변수 */
@@ -27,7 +27,7 @@ const playerConfig = {
     upgrades: {
         costPerSec: 1,
         rewardMultiplier: 1,
-        nextUpgrade: 0
+        currentHp: 100
     },
     creatureLevels: {
         dummy: 0,
@@ -63,8 +63,10 @@ function startStage(stageData) {
 /** 스테이지 데이터 기준 게임 상태 초기화 */
 function resetGameState(stageData) {
     gameState.cost = 0;
-    gameState.playerHp = 100;
-    gameState.enemyHp = 100;
+    gameState.playerHp = playerConfig.upgrades.currentHp;
+    playerHp.textContent = `${gameState.playerHp}/${playerConfig.upgrades.currentHp}`;
+    gameState.enemyHp = stageData.enemyHp;
+    enemyHp.textContent = `${gameState.enemyHp}/${stageData.enemyHp}`;
     gameState.playerCreatures = [];
     gameState.enemyCreatures = [];
     gameState.stageData = stageData;
