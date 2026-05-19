@@ -1,4 +1,4 @@
-import { costSpan, enemyHp, field, playerHp, stageBtn, stageScreen, titleScreen } from "./elements.js";
+import { backBtn, costSpan, enemyHp, field, playerHp, stageBtn, stageScreen, titleScreen, upgradeBtn, upgradeScreen } from "./elements.js";
 import { creaturesData, loadCreatureData, renderCreatureButtons, summonCreature, updateCreatures } from "./creatures.js";
 import { loadStageData, renderStageButtons, showInStage, showStageSelector } from "./stages.js";
 /** deltaTime 계산용 변수 */
@@ -35,9 +35,23 @@ export const playerConfig = {
     },
     clearedStages: ["1"]
 };
-// 스테이지 버튼 클릭 시 스테이지 선택 화면 표시
+/** 스테이지 버튼 클릭 시 스테이지 선택 화면 표시 */
 stageBtn.addEventListener("click", () => {
     void openStageSelect();
+});
+/** 업그레이드 버튼 클릭 시 업그레이드 화면 표시 */
+upgradeBtn.addEventListener("click", () => {
+    titleScreen.classList.remove("active");
+    upgradeScreen.classList.add("active");
+});
+backBtn.addEventListener("click", () => {
+    if (stageScreen.classList.contains("active")) {
+        stageScreen.classList.remove("active");
+    }
+    if (upgradeScreen.classList.contains("active")) {
+        upgradeScreen.classList.remove("active");
+    }
+    titleScreen.classList.add("active");
 });
 /** 스테이지 선택 화면 열기 */
 async function openStageSelect() {
