@@ -18,7 +18,7 @@ export function renderStageButtons(startStage) {
     stageSelector.replaceChildren();
     stagesData.forEach((stageData) => {
         const stageSelectBtn = document.createElement("button");
-        stageSelectBtn.textContent = `Stage ${stageData.no}`;
+        stageSelectBtn.textContent = stageData.name;
         stageSelectBtn.classList.add("btn", "btn-primary");
         stageSelectBtn.addEventListener("click", () => {
             startStage(stageData);

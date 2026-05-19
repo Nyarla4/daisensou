@@ -1,6 +1,7 @@
 [
     {
-        "no": "1",
+        "id": "1",
+        "name": "스테이지 1",
         "enemies": [
             {
                 "id": "dummy",
@@ -11,10 +12,12 @@
                 "timing": 7000
             }
         ],
-        "stageDistance": 500
+        "stageDistance": 500,
+        "reward": 50
     },
     {
-        "no": "2",
+        "id": "2",
+        "name": "스테이지 2",
         "enemies": [
             {
                 "id": "dummy",
@@ -29,6 +32,7 @@
                 "timing": 7000
             }
         ],
-        "stageDistance": 500
+        "stageDistance": 500,
+        "reward": 50
     }
 ]

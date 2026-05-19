@@ -1,0 +1,13 @@
+{
+    "currency": 100,
+    "upgrades": {
+        "costPerSec": 1,
+        "rewardMultiplier": 1,
+        "nextUpgrade": 0
+    },
+    "creatureLevels": {
+        "dummy": 0,
+        "dummy2": 1
+    },
+    "clearedStages": ["1"]
+}

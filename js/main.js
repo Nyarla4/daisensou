@@ -18,11 +18,21 @@ const gameState = {
     enemyHp: 100,
     playerCreatures: [],
     enemyCreatures: [],
-    distance: 500,
+    stageData: {}
 };
 /** 현재 플레이어 상태 */
 const playerConfig = {
-    costPerSec: 1,
+    currency: 100,
+    upgrades: {
+        costPerSec: 1,
+        rewardMultiplier: 1,
+        nextUpgrade: 0
+    },
+    creatureLevels: {
+        dummy: 0,
+        dummy2: 1
+    },
+    clearedStages: ["1"]
 };
 // 스테이지 버튼 클릭 시 스테이지 선택 화면 표시
 stageBtn.addEventListener("click", () => {
@@ -41,7 +51,7 @@ function startStage(stageData) {
     showInStage();
     resetGameState(stageData);
     renderCreatureButtons(gameState, updateCost);
-    field.style.width = `${gameState.distance}px`;
+    field.style.width = `${gameState.stageData.stageDistance}px`;
     lastTime = performance.now();
     stageStartTime = lastTime;
     if (!isGameRunning) {
@@ -56,7 +66,7 @@ function resetGameState(stageData) {
     gameState.enemyHp = 100;
     gameState.playerCreatures = [];
     gameState.enemyCreatures = [];
-    gameState.distance = stageData.stageDistance;
+    gameState.stageData = stageData;
     enemyQueue = [...stageData.enemies];
     field.querySelectorAll(".creature").forEach((creature) => creature.remove());
     updateCost();
@@ -73,11 +83,12 @@ function gameLoop(now) {
     spawnQueuedEnemies(now - stageStartTime);
     updateCreatures(gameState.playerCreatures, gameState.enemyCreatures, true, now, deltaTime, gameState);
     updateCreatures(gameState.enemyCreatures, gameState.playerCreatures, false, now, deltaTime, gameState);
+    checkGameOver(gameState.stageData);
     requestAnimationFrame(gameLoop);
 }
 /** 코스트 획득 */
 function gainCost(deltaTime) {
-    gameState.cost += playerConfig.costPerSec * deltaTime;
+    gameState.cost += playerConfig.upgrades.costPerSec * deltaTime;
     updateCost();
 }
 /** 큐에 있는 에너미 소환 처리 */
@@ -90,6 +101,23 @@ function spawnQueuedEnemies(stageElapsedTime) {
     if (target && enemyData) {
         summonCreature(gameState, target, false);
         console.log(`Enemy ${enemyData.id} appears!`);
+    }
+}
+/** 게임오버 체크 */
+function checkGameOver(stageData) {
+    if (gameState.playerHp <= 0) {
+        alert("Game Over! You lost.");
+        isGameRunning = false;
+        openStageSelect();
+    }
+    else if (gameState.enemyHp <= 0) {
+        alert("Congratulations! You won!");
+        isGameRunning = false;
+        if (!playerConfig.clearedStages.includes(stageData.id)) {
+            playerConfig.clearedStages.push(stageData.id);
+        }
+        playerConfig.currency += stageData.reward; // 스테이지 클리어 보상
+        openStageSelect();
     }
 }
 /** 게임 초기화 */

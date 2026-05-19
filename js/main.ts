@@ -1,6 +1,6 @@
 import { costSpan, field, stageBtn, stageScreen, titleScreen } from "./elements.js";
 import { creaturesData, loadCreatureData, renderCreatureButtons, summonCreature, updateCreatures } from "./creatures.js";
-import { EnemySpawn, GameState, PlayerConfig, StageData } from "./interfaces.js";
+import { EnemySpawn, GameState, PlayerState, StageData } from "./interfaces.js";
 import { loadStageData, renderStageButtons, showInStage, showStageSelector } from "./stages.js";
 
 /** deltaTime 계산용 변수 */
@@ -25,12 +25,22 @@ const gameState: GameState = {
     enemyHp: 100,
     playerCreatures: [],
     enemyCreatures: [],
-    distance: 500,
+    stageData: {} as StageData
 };
 
 /** 현재 플레이어 상태 */
-const playerConfig: PlayerConfig = {
-    costPerSec: 1,
+const playerConfig: PlayerState = {
+    currency: 100,
+    upgrades: {
+        costPerSec: 1,
+        rewardMultiplier: 1,
+        nextUpgrade: 0
+    },
+    creatureLevels: {
+        dummy: 0,
+        dummy2: 1
+    },
+    clearedStages: ["1"]
 };
 
 // 스테이지 버튼 클릭 시 스테이지 선택 화면 표시
@@ -52,7 +62,7 @@ function startStage(stageData: StageData) {
     showInStage();
     resetGameState(stageData);
     renderCreatureButtons(gameState, updateCost);
-    field.style.width = `${gameState.distance}px`;
+    field.style.width = `${gameState.stageData.stageDistance}px`;
 
     lastTime = performance.now();
     stageStartTime = lastTime;
@@ -69,7 +79,7 @@ function resetGameState(stageData: StageData) {
     gameState.enemyHp = 100;
     gameState.playerCreatures = [];
     gameState.enemyCreatures = [];
-    gameState.distance = stageData.stageDistance;
+    gameState.stageData = stageData;
     enemyQueue = [...stageData.enemies];
     field.querySelectorAll(".creature").forEach((creature) => creature.remove());
     updateCost();
@@ -90,12 +100,13 @@ function gameLoop(now: number) {
     updateCreatures(gameState.playerCreatures, gameState.enemyCreatures, true, now, deltaTime, gameState);
     updateCreatures(gameState.enemyCreatures, gameState.playerCreatures, false, now, deltaTime, gameState);
 
+    checkGameOver(gameState.stageData);
     requestAnimationFrame(gameLoop);
 }
 
 /** 코스트 획득 */
 function gainCost(deltaTime: number) {
-    gameState.cost += playerConfig.costPerSec * deltaTime;
+    gameState.cost += playerConfig.upgrades.costPerSec * deltaTime;
     updateCost();
 }
 
@@ -111,6 +122,23 @@ function spawnQueuedEnemies(stageElapsedTime: number) {
     if (target && enemyData) {
         summonCreature(gameState, target, false);
         console.log(`Enemy ${enemyData.id} appears!`);
+    }
+}
+
+/** 게임오버 체크 */
+function checkGameOver(stageData: StageData) {
+    if (gameState.playerHp <= 0) {
+        alert("Game Over! You lost.");
+        isGameRunning = false;
+        openStageSelect();
+    } else if (gameState.enemyHp <= 0) {
+        alert("Congratulations! You won!");
+        isGameRunning = false;
+        if (!playerConfig.clearedStages.includes(stageData.id)) {
+            playerConfig.clearedStages.push(stageData.id);
+        }
+        playerConfig.currency += stageData.reward; // 스테이지 클리어 보상
+        openStageSelect();
     }
 }
 

@@ -8,5 +8,4 @@ creature
 └level < 1: can't use, don't make summon btn
 └level >= 1: can use, set on ordinary creature at upgrade, make summon btn
 
--------------------------------
-place to save data?
+get upgrades, creatureLevels, currency from json/playerData

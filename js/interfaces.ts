@@ -31,11 +31,20 @@ export interface GameState {
     enemyHp: number;
     playerCreatures: CreatureInstance[];
     enemyCreatures: CreatureInstance[];
-    distance: number;
+    stageData: StageData;
 }
 
-export interface PlayerConfig {
-    costPerSec: number;
+export interface PlayerState {
+    currency: number;
+    upgrades: {
+        costPerSec: number,
+        rewardMultiplier: number,
+        nextUpgrade: number
+    },
+    creatureLevels: {
+        [key: string]: number
+    },
+    clearedStages: string[]
 }
 
 export interface EnemySpawn {
@@ -44,7 +53,9 @@ export interface EnemySpawn {
 }
 
 export interface StageData {
-    no: string;
+    id: string;
+    name: string;
     enemies: EnemySpawn[];
     stageDistance: number;
+    reward: number;
 }
