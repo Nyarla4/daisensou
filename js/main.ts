@@ -103,7 +103,9 @@ function gameLoop(now: number) {
     updateCreatures(gameState.enemyCreatures, gameState.playerCreatures, false, now, deltaTime, gameState);
 
     checkGameOver(gameState.stageData);
-    requestAnimationFrame(gameLoop);
+    if(isGameRunning){
+        gameLoopId = requestAnimationFrame(gameLoop);
+    }
 }
 
 /** 코스트 획득 */
