@@ -31,7 +31,7 @@ const gameState: GameState = {
 };
 
 /** 현재 플레이어 상태 */
-const playerConfig: PlayerState = {
+export const playerConfig: PlayerState = {
     currency: 100,
     upgrades: {
         costPerSec: 1,

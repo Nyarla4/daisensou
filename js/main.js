@@ -22,7 +22,7 @@ const gameState = {
     stageData: {}
 };
 /** 현재 플레이어 상태 */
-const playerConfig = {
+export const playerConfig = {
     currency: 100,
     upgrades: {
         costPerSec: 1,

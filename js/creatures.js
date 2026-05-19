@@ -1,4 +1,5 @@
-import { creatureBtnContainer, enemyBase, field, playerBase } from "./elements.js";
+import { creatureBtnContainer, enemyBase, enemyHp, field, playerBase, playerHp } from "./elements.js";
+import { playerConfig } from "./main.js";
 /** 개체 사망 후 사라지기까지 시간 */
 const REMOVE_DEAD_CREATURE_DELAY = 5000;
 /** 피해시 넉백 거리 */
@@ -179,10 +180,12 @@ function attackBase(gameState, creature, isPlayerSide, now) {
     setCreatureImage(creature, creature.data.attack);
     if (isPlayerSide && gameState.enemyHp > 0) {
         gameState.enemyHp -= creature.data.attackDamage;
+        enemyHp.textContent = `${gameState.enemyHp}/${gameState.stageData.enemyHp}`;
         console.log(`Enemy base takes ${creature.data.attackDamage} damage! Enemy HP: ${gameState.enemyHp}`);
     }
     if (!isPlayerSide && gameState.playerHp > 0) {
         gameState.playerHp -= creature.data.attackDamage;
+        playerHp.textContent = `${gameState.playerHp}/${playerConfig.upgrades.currentHp}`;
         console.log(`Player base takes ${creature.data.attackDamage} damage! Player HP: ${gameState.playerHp}`);
     }
 }
