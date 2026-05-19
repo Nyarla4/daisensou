@@ -23,6 +23,13 @@
     width: 100%;
 }
 
+#back-btn {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1000;
+}
+
 #field{
     position: relative;
     width: 100%;
